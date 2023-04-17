@@ -3,7 +3,7 @@
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mklarqvist/ai-playground/blob/main/perplexity-clone/perplexity_clone.ipynb)
 
-Perplexity AI ([perplexity.ai](perplexity.ai)) is an chat tool that uses foundational language models, such as GPT-4 from OpenAI, along with current information from the internet. It not only provides answers, but also references to the sources that contributed to those answers. This simple, yet powerful approach addresses the limitation of potentially outdated training data used to train the models. By returning the sources used to provide an answer, you can verify its accuracy. This combats the issue of language models generating incorrect answers.
+Perplexity AI ([perplexity.ai](https://www.perplexity.ai)) is an chat tool that uses foundational language models, such as GPT-4 from OpenAI, along with current information from the internet. It not only provides answers, but also references to the sources that contributed to those answers. This simple, yet powerful approach addresses the limitation of potentially outdated training data used to train the models. By returning the sources used to provide an answer, you can verify its accuracy. This combats the issue of language models generating incorrect answers.
 
 This may sound like a major project and a serious undertaking, but modern tools have made it surprisingly easy.
 
