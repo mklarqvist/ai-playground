@@ -33,7 +33,7 @@
     <div class="chat-responses mt-3">
       <div v-if="messages.length > 1" v-for="(message, idx) in messages.slice(-1)" :key="`message-${idx}`">
         <VueShowdown :ref="`chat-msg-${idx}`" class="markdown-body prose"
-          :class="isStreaming && (idx == (messages.length - 2)) ? 'result-streaming' : ''" flavor="github"
+          :class="isStreaming ? 'result-streaming' : ''" flavor="github"
           :options="{ emoji: true }" :markdown="message.content">
         </VueShowdown>
       </div>
