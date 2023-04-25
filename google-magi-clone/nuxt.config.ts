@@ -1,4 +1,6 @@
 import vuetify from "vite-plugin-vuetify";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 // PWA Config
 const title = "Google Magi Clone with Nuxt3 + Vuetify";
@@ -10,6 +12,21 @@ const url = "https://github.com/mklarqvist/ai-playground/";
 
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
+  nitro: {
+    experimental: {
+      wasm: true
+    }
+  },
+  buildModules: [
+    'nuxt-vite',
+  ],
+  vite: {
+    plugins: [
+      wasm(), topLevelAwait(),
+    ],
+    ssr: true, // enable unstable server-side rendering for development (false by default)
+    // experimentWarning: false // hide experimental warning message (disabled by default for tests)
+  },
   // import styles
   // css: ["@/assets/main.scss"],
   css: [
@@ -18,10 +35,13 @@ export default defineNuxtConfig({
     "@/assets/main.scss",
   ],
   // enable takeover mode
-  typescript: { shim: false },
+  // typescript: { shim: false },
   build: { transpile: ["vuetify"] },
   modules: [
+    '@pinia/nuxt',
+    '@pinia-plugin-persistedstate/nuxt',
     "@kevinmarrec/nuxt-pwa",
+    '@nuxtjs/google-fonts',
     async (options, nuxt) => {
       nuxt.hooks.hook("vite:extendConfig", (config) =>
         // @ts-ignore
@@ -29,7 +49,14 @@ export default defineNuxtConfig({
       );
     },
   ],
-
+  googleFonts: {
+    families: {
+      "Inter": {
+        wght: [400, 500, 600, 700, 800],
+        ital: [400, 500, 600, 700, 800],
+      },
+    },
+  },
   app: {
     head: {
       title: "Vuetify 3 + Nuxt 3 Starter",

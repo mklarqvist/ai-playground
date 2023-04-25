@@ -1,144 +1,199 @@
-<!-- Interesting edge case bug for our Markdown parser -->
-<!-- What HTML tag did Marc Andreessen propose?  -->
+<!-- best question: why did elon rocket blow up? -->
 <template>
-  <div class="d-flex pt-1 px-4" id="page-controls">
-    <v-switch inset color="info" v-model="darkMode" @change="toggleTheme()" prepend-icon="mdi-moon-waxing-crescent"
-      append-icon="mdi-white-balance-sunny" style="display: inherit;"></v-switch>
+  <div>
 
-    <nuxt-link to="https://twitter.com/MarcusKlarqvist"><v-btn
-        variant='text'><v-icon size="28">mdi-twitter</v-icon></v-btn></nuxt-link>
-    <nuxt-link to="https://github.com/mklarqvist/ai-playground"><v-btn variant='text'><v-icon size="28">mdi-github</v-icon></v-btn></nuxt-link>
-  </div>
+      <div class="d-flex pt-1 px-4" id="page-controls">
+          <v-switch inset color="info" v-model="darkMode" @change="toggleTheme()" prepend-icon="mdi-moon-waxing-crescent"
+              append-icon="mdi-white-balance-sunny" style="display: inherit;"></v-switch>
 
-  <v-container class="google-container">
-      <v-form @submit.prevent id="search-input" class="pulse">
-        <v-textarea clearable id="chat-textarea" v-model="chatTextArea" rows="1" auto-grow hide-details="auto"
-          color="blue" variant="solo" @keypress.enter="(event) => clickAsk(event)">
-          <template v-slot:prepend-inner>
-            <img src="/google_logo.svg" height="24" alt="Google Logo" class="mr-2" />
-          </template>
-        </v-textarea>
-
-      </v-form>
-      <h1 class="search-family-types-header">Filters and Topics</h1>
-      <v-chip-group class="search-family-types my-2">
-        <v-chip variant="outlined"><v-icon class="mr-1">mdi-image-outline</v-icon>Images</v-chip>
-        <v-chip variant="outlined"><v-icon class="mr-1">mdi-newspaper-variant</v-icon>News</v-chip>
-        <v-chip variant="outlined"><v-icon class="mr-1">mdi-tag-outline</v-icon>Shopping</v-chip>
-        <v-chip variant="outlined"><v-icon class="mr-1">mdi-play-box-outline</v-icon>Video</v-chip>
-      </v-chip-group>
-      <v-divider></v-divider>
-
-
-    <div class="chat-responses mt-3">
-      <div v-if="messages.length > 1" v-for="(message, idx) in messages.slice(-1)" :key="`message-${idx}`">
-        <VueShowdown :ref="`chat-msg-${idx}`" class="markdown-body prose"
-          :class="isStreaming ? 'result-streaming' : ''" flavor="github"
-          :options="{ emoji: true }" :markdown="message.content">
-        </VueShowdown>
+          <nuxt-link to="https://twitter.com/MarcusKlarqvist" target="_blank"><v-btn variant='text'><v-icon
+                      size="28">mdi-twitter</v-icon></v-btn></nuxt-link>
+          <nuxt-link to="https://github.com/mklarqvist/ai-playground" target="_blank"><v-btn variant='text'><v-icon
+                      size="28">mdi-github</v-icon></v-btn></nuxt-link>
       </div>
-    </div>
-    <div class="mb-4 mt-1 d-flex justify-end" v-if="hasFinished">
-      <v-btn variant="text"><v-icon>mdi-thumb-up-outline</v-icon></v-btn>
-      <v-btn variant="text"><v-icon>mdi-thumb-down-outline</v-icon></v-btn>
-    </div>
 
-    <!-- Read more section -->
-    <div v-if="hasSearched">
-      <h4 class="my-3 search-read-more">Read more</h4>
-      <v-row class="mb-2">
-        <v-col cols="4" v-for="idx in 3">
+      <v-container class="google-container">
+          <!-- Search form -->
+          <v-form @submit.prevent id="search-input" class="pulse">
+              <v-textarea clearable id="chat-textarea" v-model="chatTextArea" rows="1" auto-grow hide-details="auto"
+                  color="blue" variant="solo" @keypress.enter="(event) => searchQuestion(chatTextArea, event)">
+                  <template v-slot:prepend-inner>
+                      <img src="/google_logo.svg" height="24" alt="Google Logo" class="mr-2" />
+                  </template>
+              </v-textarea>
+          </v-form>
 
-          <v-card class="mx-auto" max-width="400" fill-height>
-            <v-img class="align-end text-white" height="100" src="https://cdn.vuetifyjs.com/images/cards/docks.jpg" cover>
-            </v-img>
+          <!-- Action bar -->
+          <h1 class="search-family-types-header">Filters and Topics</h1>
+          <v-chip-group class="search-family-types my-2">
+              <v-chip variant="outlined"><v-icon class="mr-1">mdi-image-outline</v-icon>Images</v-chip>
+              <v-chip variant="outlined"><v-icon class="mr-1">mdi-newspaper-variant</v-icon>News</v-chip>
+              <v-chip variant="outlined"><v-icon class="mr-1">mdi-tag-outline</v-icon>Shopping</v-chip>
+              <v-chip variant="outlined"><v-icon class="mr-1">mdi-play-box-outline</v-icon>Video</v-chip>
+          </v-chip-group>
+          <v-divider></v-divider>
 
-            <div class="pa-4">
-              <div class="search-result-meta d-flex">
-                <span class="fav-icon-container"><img src="/google_logo.svg" height="18" alt="Google Logo" /></span>
-                <div class="d-flex flex-column">
-                  <div class="search-result-meta-title">og:title</div>
-                </div>
+          <!-- Chat response -->
+          <div class="chat-responses mt-3">
+              <div v-if="chatChain.length > 1" v-for="(message, idx) in chatChain.slice(-1)" :key="`message-${idx}`">
+                  <VueShowdown :ref="`chat-msg-${idx}`" class="markdown-body prose"
+                      :class="isChatStreaming ? 'result-streaming' : ''" flavor="github" :options="{ emoji: true }"
+                      :markdown="message.content">
+                  </VueShowdown>
               </div>
-              <nuxt-link to="https://www.google.com">
-                <h4 class="search-result-title mt-2 mb-1">og:title {{ idx }}</h4>
-              </nuxt-link>
-              <div class="search-result-description">og:description...</div>
-            </div>
-          </v-card>
-
-        </v-col>
-      </v-row>
-
-      <!-- Similar questions section -->
-      <v-chip-group>
-        <v-chip v-for="i in 4" variant="outlined">similar question {{ i }}</v-chip>
-      </v-chip-group>
-    </div>
-  </v-container>
-
-  <!-- Search results -->
-  <v-divider :thickness="10" class="mt-4 mb-1"></v-divider>
-
-  <v-container class="google-container" style="min-height:500px;">
-
-    <template v-if="isScraping">
-    <v-skeleton-loader v-for="skeleton in 6" type="article"></v-skeleton-loader>
-  </template>
-    <template v-if="ret">
-      <transition-group name="slide-in" :style="{ '--total': ret.value.api.length }" tag="div">
-        <div class="search-result" v-for="(document, did) in ret.value.api" :key="`dix-${did}`" :style="{ '--i': did + 1 }"
-          v-if="showItems">
-          <div class="d-flex">
-            <div class="me-auto">
-              <nuxt-link :to="document.metadata.url">
-                <div class="search-result-meta d-flex">
-                  <span class="fav-icon-container"><img v-if="document.metadata.favicon != 'N/A'"
-                      :src="validFavIconLink(document.metadata.favicon, document.metadata.url)" height="18"
-                      alt="" /></span>
-                  <div class="d-flex flex-column">
-                    <div class="search-result-meta-title">{{ document.metadata.og_title }}</div>
-                    <div class="search-result-meta-url">{{ document.metadata.url }}</div>
-                  </div>
-                </div>
-
-                <h3 class="search-result-title mt-2 mb-1">{{ document.metadata.page_title }}</h3>
-              </nuxt-link>
-              <div class="search-result-description">{{ document.metadata.og_desc }}</div>
-            </div>
-            <!-- If there is an image -->
-            <div v-if="document.metadata.og_image != 'N/A'" class="ml-4">
-              <v-img style="border-radius: 24px;border:1px solid #dadce0;" class="bg-white" width="200" :aspect-ratio="1"
-                :src="document.metadata.og_image" alt="" cover></v-img>
-            </div>
           </div>
-        </div>
-      </transition-group>
-    </template>
 
-  </v-container>
+          <div class="mb-4 mt-1 d-flex justify-end" v-if="isChatFinished">
+              <v-btn variant="text"><v-icon>mdi-thumb-up-outline</v-icon></v-btn>
+              <v-btn variant="text"><v-icon>mdi-thumb-down-outline</v-icon></v-btn>
+          </div>
+
+
+          <!-- Similar questions section -->
+          <template v-if="isSearchingSuggestions && !haveSuggestedQueries">
+              <TransitionGroup appear tag="div" class="d-flex flex-wrap" @before-enter="OpacityonBeforeEnter"
+                  @enter="OpacityonEnter" @leave="OpacityonLeave">
+                  <v-skeleton-loader v-for="(skeleton, index) in 10" :key="skeleton" type="chip"
+                      :width="skeletonChipWidth[index]" :data-index="index"></v-skeleton-loader>
+              </TransitionGroup>
+          </template>
+
+
+          <template v-if="haveSuggestedQueries">
+              <TransitionGroup appear tag="div" class="d-flex flex-wrap" @before-enter="OpacityonBeforeEnter"
+                  @enter="OpacityonEnter" @leave="OpacityonLeave">
+
+                  <nuxt-link @click.native.prevent="clickAskRelevant(chip)" to="#"
+                      v-for="(chip, index) in processedSuggestedQueries" :key="chip" :data-index="index" target="_blank">
+                      <v-chip class="mr-2 mb-2" variant="outlined">{{ chip }}</v-chip>
+                  </nuxt-link>
+              </TransitionGroup>
+          </template>
+      </v-container>
+
+      <v-divider :thickness="10" class="my-4 mb-1"></v-divider>
+
+      <!-- Search results -->
+      <v-container>
+          <div>
+              <!-- Scraping data -->
+              <div v-if="isScraping" class="d-flex">
+                  <img src="dino_loader.gif" height="200" alt="dino running">
+                  <p>Scraping...</p>
+              </div>
+              <!-- Scraping is finished -->
+              <div v-if="isScrapingCompleted">
+                  <!-- Images -->
+                  <div class="d-flex">
+                      <v-row>
+                          <TransitionGroup appear @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
+                              <v-col v-for="(image, index) in scrapedImages" cols="3" :key="`image-${index}`"
+                                  :data-index="index">
+                                  <div>
+                                      <nuxt-link :to="image.source_url" target="_blank">
+                                          <img :src="`https://www.google.com/s2/favicons?domain=${image.source_url}&sz=16`"
+                                              loading="lazy">
+                                          <v-img aspect-ratio="16/9" cover :src="image.src" :alt="image.alt"
+                                              loading="lazy" style="border-radius:12px;border:1px solid #aaa;"></v-img>
+                                      </nuxt-link>
+                                  </div>
+                              </v-col>
+                          </TransitionGroup>
+                      </v-row>
+                  </div>
+              </div>
+              <div class="d-flex my-10">
+                  <div style="max-width: 648px;">
+                      <!-- Search results -->
+                      <template v-if="isSearchCompleted">
+                          <TransitionGroup appear @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
+                              <div class="search-result" v-for="(value, index) in search_response.items"
+                                  :key="`dix-${index}`" :data-index="index">
+                                  <div class="d-flex">
+                                      <div class="me-auto">
+                                          <nuxt-link :to="value.link" target="_blank">
+                                              <div class="search-result-meta d-flex">
+                                                  <span class="fav-icon-container"><img
+                                                          :src="`https://www.google.com/s2/favicons?domain=${value.link}&sz=16`"
+                                                          loading="lazy"></span>
+                                                  <div class="d-flex flex-column">
+                                                      <div class="search-result-meta-title">{{ value.displayLink }}</div>
+                                                      <div class="search-result-meta-url">{{ value.formattedUrl }}</div>
+                                                  </div>
+                                              </div>
+
+                                              <h3 class="search-result-title mt-2 mb-1">{{ value.title }}</h3>
+                                          </nuxt-link>
+                                          <div class="search-result-description">{{ value.snippet }}</div>
+                                      </div>
+                                      <!-- If there is an image -->
+                                      <div v-if="hasImage(value)" class="ml-4">
+                                          <nuxt-link :to="value.link" target="_blank">
+                                              <v-img style="border-radius: 24px;border:1px solid #dadce0;"
+                                                  class="bg-white" width="200" :aspect-ratio="1"
+                                                  :src="value.pagemap.metatags[0]['og:image']" alt="" cover></v-img>
+                                          </nuxt-link>
+                                      </div>
+                                  </div>
+                              </div>
+                          </TransitionGroup>
+                      </template>
+
+
+                  </div>
+                  <div style="max-width: 432px;" class="ml-4">
+                      <!-- Wikipedia scraping if available -->
+                      <!-- TODO -->
+                      <!-- Videos -->
+                      <TransitionGroup appear @before-enter="onBeforeEnter" @enter="onEnter" @leave="onLeave">
+                          <iframe width="420" height="315" v-for="(video, index) in scrapedVideos"
+                              :src="getYoutubeId(video)" :key="`video-${index}`" :data-index="index">
+                          </iframe>
+                      </TransitionGroup>
+                  </div>
+              </div>
+          </div>
+      </v-container>
+  </div>
 </template>
 
 <script setup>
-import { fetchStreamedChat, fetchStreamedChatContent } from '~/server/streamer';
 import { VueShowdown } from "vue-showdown";
+import { fetchStreamedChat } from '~/server/streamer';
+import { Document } from "langchain/document";
+import { searchHistoryStore } from '@/stores/search'
 import { useTheme } from "vuetify";
+import gsap from 'gsap'
 
-// CHANGE THIS API KEY WITH YOUR OWN
-const apiKey = 'YOUR-OWN-API-KEY';
 
-const ret = ref(null);
-const showItems = ref(false);
-
-const messages = ref([
-  { role: 'system', content: 'You are a helpful assistant and epxert communicator with exceptional story-telling skills that answer questions with as many details as possible.' },
-]);
-
-const chatTextArea = ref(null);
-const isStreaming = ref(false);
+// const store = searchHistoryStore() // Use this if you want to persist the search history and responses
+const search_response = ref(null);
+const isSearchCompleted = ref(false);
+const isSearching = ref(false);
 const isScraping = ref(false);
-const hasSearched = ref(false);
-const hasFinished = ref(false);
+const isScrapingCompleted = ref(false);
+const isChatStreaming = ref(false);
+const isChatFinished = ref(false);
+const suggestedQueries = ref([]);
+const isSearchingSuggestions = ref(false);
+const haveSuggestedQueries = ref(false);
+const processedSuggestedQueries = ref([]);
+const skeletonChipWidth = Array.from({ length: 10 }, () => Math.random() * (200 - 100) + 100);
+const chatTextArea = ref(null);
+
+// These are used in the mode when we scrape from the meta results from Google
+const snippets = ref([]);
+const descriptions = ref([]);
+const metaBody = ref([]);
+// These are used in the mode when we scrape from the actual pages
+const allSearchData = ref([]);
+const charLength = ref(0);
+const allSearchDataDeduped = ref([]);
+const chatChain = ref([]);
+const scrapedResults = ref([]);
+const scrapedImages = ref([]);
+const scrapedVideos = ref([]);
+const scrapedContext = ref([]);
 
 const theme = useTheme();
 const darkMode = ref(false);
@@ -148,91 +203,259 @@ const toggleTheme = () => {
 };
 
 
-async function clickAsk(event) {
-  if (event) {
-    event.preventDefault()
-  }
+const google_api_key = 'YOUR-GOOGLE-API-KEY';
+const google_api_cx = 'YOUR-GOOGLE-API-CX';
+const openaiApiKey = 'YOUR-OPENAI-API-KEY';
 
-  if (chatTextArea.value.length == 0) {
-    return;
+function hasImage(value) {
+  try {
+      return value.pagemap?.metatags?.[0]?.['og:image'] ?? false
+  } catch {
+      return false;
   }
+}
 
-  showItems.value = false;
-  isScraping.value = true;
+function hasSitename(value) {
+  try {
+      return value.pagemap?.metatags?.[0]?.['og:site_name'] ?? new URL(value.link).hostname;
+  } catch {
+      return new URL(value.link).hostname;
+  }
+}
+
+// Steps:
+// 1. Perform the Google query and retrieve the results
+// 2. Process the results into a format usable by LngChain.
+// 3. Compute embeddings for the results using the OpenAI API.
+// 4. Compute the similarity between the embeddings and the question.
+// 5. Sort the results by similarity and return the top N results.
+const googleSearch = async (question) => {
+  // store.searchHistory.push(question);
+  // Step 1. Perform as Google search query and retrieve the results
+  isSearching.value = true;
   // Promise chain
-  useFetch(`/api/scrape/${encodeURIComponent(chatTextArea.value)}`)
-    .then(({ data }) => (ret.value = data))
-    .finally(() => { showItems.value = true; isScraping.value = false; })
-  messages.value.push({ role: 'user', content: chatTextArea.value + ' Give me as much details as possible.' });
-  await askFakeMagi();
-}
+  await useFetch(`https://www.googleapis.com/customsearch/v1?key=${google_api_key}&cx=${google_api_cx}&q=${encodeURIComponent(question)}&sxsrf=APwXEddWEXesmZNlNIWkyps246ZpKr5Bkg:1682369765159&source=lnt&tbs=qdr:y&sa=X&ved=2ahUKEwiVru7hs8P-AhUvMlkFHZjHDdEQpwV6BAgBEAs&biw=1512&bih=831&dpr=2`).then(({ data }) => {
+      // Since the response will be a nested Proxy, we need to convert it to a plain object
+      // in order to be able to store it in the store. If we don't do this, the store will
+      // not be able to serialize the data and thus also not be able to persist it.
+      const flattenedData = JSON.parse(JSON.stringify(data.value));
+      // store.searchResponses.push(flattenedData);
+      console.log('flattened', flattenedData)
+      console.log('flattened items', flattenedData.items)
+      search_response.value = flattenedData;
+      isSearching.value = false;
+      isSearchCompleted.value = true;
 
-async function askFakeMagi() {
-  messages.value.push({ role: 'system', content: '' });
-  isStreaming.value = true;
-  hasSearched.value = true;
-  hasFinished.value = false;
-  await fetchStreamedChat({
-    apiKey,
-    messageInput: messages.value,
-    maxTokens: 1000,
-    temperature: 0.025,
-    fetchTimeout: 10000,
-  }, (responseChunk) => {
-    // get the actual content from the JSON
-    const content = JSON.parse(responseChunk).choices[0].delta.content;
-    if (content) {
-      messages.value.at(-1).content += content;
-    }
+      // // This is for the approach where we scrape the meta results from the Google response API
+      // Chain the promises together
+      // processQuery(search_response.value)
+      //     .then(askLanguageModel(
+      //         allSearchDataDeduped.value, 
+      //         question, 
+      //         openaiApiKey));
   })
-  hasFinished.value = true;
-  isStreaming.value = false;
+
+  isScraping.value = true;
+  const similarity = await useFetch('/api/google/search', {
+      method: 'POST',
+      body: {
+          'query': question,
+          'openaiAPIKey': openaiApiKey,
+          'urls': search_response.value.items.map((item) => item.link),
+      }
+  })
+  scrapedResults.value = similarity;
+  const collapsedContext = similarity.data.value.similar.reduce((acc, curr) => {
+      return acc + curr.context
+  }, '')
+
+  scrapedImages.value = similarity.data.value.images;
+  scrapedVideos.value = similarity.data.value.videos;
+  scrapedContext.value = similarity.data.value.similar;
+  isScraping.value = false;
+  isScrapingCompleted.value = true;
+
+  await askLanguageModel(collapsedContext, question, openaiApiKey);
+  await askLanguageModelToMakeSuggestions(collapsedContext, question, openaiApiKey);
 }
 
-function validFavIconLink(url, src) {
-  var pattern = /^((http|https|ftp):\/\/)/;
-  if (!pattern.test(url)) {
-    const { protocol, hostname } = new URL(src);
-    url = protocol + '//' + hostname + url;
+const searchQuestion = async (question, event) => {
+  if (event) {
+      event.preventDefault()
   }
-  return url;
+
+  if (question) {
+      await googleSearch(question);
+  }
 }
+
+async function clickAskRelevant(question) {
+  chatTextArea.value = question;
+  await searchQuestion(question);
+}
+
+const getYoutubeId = (url) => {
+  console.log('given url', url)
+  const videoId = url.split('v=')[1];
+  const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+  try {
+      return embedUrl;
+  } catch {
+      return '';
+  }
+}
+
+function splitMarkdownList(list) {
+  const lines = list.split('\n');
+  const items = lines.map(line => line.replace(/^\d+\.\s*/, ''));
+  return items;
+}
+
+const processQuery = async (data) => {
+  // Step 2. Process the results into a format usable by LngChain.
+  // Conver the input data to a series of LangChain Document objects that we
+  // will use to compute embeddings from using the OpenAI API. Each LangChain
+  // Document will contain the text of interest and any meta data we define:
+  // in this case the index mapping back to the search result array.
+  // There are three possible places to get meaningful text from:
+  // 1. The snippet
+  // 2. The og:description
+  // 3. The body of the page
+  // We will use all three to get the most accurate results.
+  // Since some of the results may not have any, or all, of the above, we will filter out
+  // those. We will keep track of the index of the original search result so we can
+  // map back to the original search result array.
+  // Extract out og:description
+  descriptions.value = data.items.map((item, index) => new Document({ pageContent: item.pagemap?.metatags?.[0]?.['og:description'] ?? null, metadata: { source: item.link, index: index, tag: 'meta:og:description' } }),).filter((doc) => doc.pageContent)
+  // Extract out body (a rare case)
+  metaBody.value = data.items.map((item, index) => new Document({ pageContent: item.pagemap?.metatags?.[0]?.['body'] ?? null, metadata: { source: item.link, index: index, tag: 'meta:body' } }),).filter((doc) => doc.pageContent)
+  // Extract out snippets (computed by Google)
+  snippets.value = data.items.map((item, index) => new Document({ pageContent: item.snippet ?? null, metadata: { source: item.link, index: index, tag: 'snippet' } }),).filter((doc) => doc.pageContent)
+  // Smash them all together using a spread operator
+  allSearchData.value = [...descriptions.value, ...metaBody.value, ...snippets.value];
+  // Compute the total number of characters in the search results
+  charLength.value = allSearchData.value.reduce((accumulator, currentValue) => accumulator + currentValue.pageContent.length, 0)
+  // Since it's possible that the same information is returned multiple times, we need to dedupe the array
+  // using the pageContent as the unique identifier in a hash map.
+  var seen = {};
+  allSearchDataDeduped.value = allSearchData.value.filter(function (item) {
+      return seen.hasOwnProperty(item.pageContent) ? false : (seen[item] = true);
+  });
+  console.log('unique_docs length', allSearchDataDeduped.value.reduce((accumulator, currentValue) => accumulator + currentValue.pageContent.length, 0));
+}
+
+
+const askLanguageModel = async (context, question, apiKey) => {
+  // const context = data.reduce((accumulator, currentValue, currentIndex) => accumulator + (currentIndex + 1) + ": " + currentValue.pageContent + '\n\n', '')
+
+  // This is the default template from LangChain for retrieva QA:
+  // const prompt_template = "Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer."
+  // We are goign to modify it to include the context from the search results.
+  chatChain.value = [{ role: 'system', content: `You are a helpful assistant and expert communicator with exceptional story-telling skills that answer questions with as much detail as possible given a provided context. If you don't know the answer, just say that you don't know, don't try to make up an answer.` }]
+  chatChain.value.push({ role: 'user', content: `${question}\nContext:\n${context}` });
+  chatChain.value.push({ role: 'assistant', content: '' });
+
+
+  console.log(chatChain.value);
+  // For question-answering, it is common to set the temperature to 0.0 to get the most likely answer. We
+  // will use a slightly higher temperature to get a more comprehensive answer but still within the bounds
+  // of the context.
+  isChatStreaming.value = true;
+  isChatFinished.value = false;
+  await fetchStreamedChat({
+      apiKey,
+      messageInput: chatChain.value.slice(0, -1),
+      maxTokens: 1000,
+      temperature: 0.01,
+      fetchTimeout: 10000,
+  }, (responseChunk) => {
+      // get the actual content from the JSON
+      const content = JSON.parse(responseChunk).choices[0].delta.content;
+      if (content) {
+          chatChain.value.at(-1).content += content;
+      }
+  })
+  isChatStreaming.value = false;
+  isChatFinished.value = true;
+  // store.searchResponses.push(chatChain.value.at(-1).content);
+}
+
+const askLanguageModelToMakeSuggestions = async (context, question, apiKey) => {
+  suggestedQueries.value.push({ role: 'system', content: 'Suggest 10 related searches that would be relevant and interesting given the provided context and previous question. Do not talk to me. Do not reply with anything but the search queries.' },);
+  suggestedQueries.value.push({ role: 'user', content: `Previous question:\n${question}\nContext:\n${context}` });
+  suggestedQueries.value.push({ role: 'assistant', content: '' });
+  isSearchingSuggestions.value = true;
+  await fetchStreamedChat({
+      apiKey,
+      messageInput: suggestedQueries.value,
+      maxTokens: 1000,
+      temperature: 1.0,
+      fetchTimeout: 10000,
+  }, (responseChunk) => {
+      const content = JSON.parse(responseChunk).choices[0].delta.content;
+      if (content) {
+          suggestedQueries.value.at(-1).content += content;
+      }
+  })
+  processedSuggestedQueries.value = splitMarkdownList(suggestedQueries.value.at(-1).content);
+  haveSuggestedQueries.value = true; // Add before streaming to animate
+  isSearchingSuggestions.value = false;
+}
+
+// Todo: If one of the domains in the list is Wikipedia then perform a Wikipedia-specific scraping
+// query to retrieve the summarization paragraph and summarization table. You can see this on both
+// Google and Bing search results.
+
+
+// Animation with greensocket
+const onBeforeEnter = (el) => {
+  el.style.opacity = 0
+  el.style.x = 0
+}
+
+const onEnter = (el, done) => {
+  gsap.to(el, {
+      opacity: 1,
+      x: '1em',
+      delay: el.dataset.index * 0.15,
+      onComplete: done
+  })
+}
+
+const onLeave = (el, done) => {
+  gsap.to(el, {
+      opacity: 0,
+      x: '-1em',
+      delay: el.dataset.index * 0.15,
+      onComplete: done
+  })
+}
+
+// Animation with greensocket
+const OpacityonBeforeEnter = (el) => {
+  el.style.opacity = 0
+}
+
+const OpacityonEnter = (el, done) => {
+  gsap.to(el, {
+      opacity: 1,
+      delay: el.dataset.index * 0.15,
+      onComplete: done
+  })
+}
+
+const OpacityonLeave = (el, done) => {
+  gsap.to(el, {
+      opacity: 0,
+      delay: el.dataset.index * 0.15,
+      onComplete: done
+  })
+}
+
 
 </script>
 
-<style lang="scss">
-.slide-in {
-
-  &-move {
-    transition: opacity .5s linear, transform .5s ease-in-out;
-  }
-
-  &-leave-active {
-    transition: opacity 0.4s linear, transform .4s cubic-bezier(.5, 0, .7, .4); //cubic-bezier(.7,0,.7,1); 
-    transition-delay: calc(0.2s * (var(--total) - var(--i)));
-  }
-
-  &-enter-active {
-    transition: opacity 0.4s linear, transform .5s cubic-bezier(.2, .5, .1, 1);
-    transition-delay: calc(0.2s * var(--i));
-  }
-
-  &-enter-from,
-  &-leave-to {
-    opacity: 0;
-  }
-
-  &-enter-from {
-    transform: translateX(-1em);
-  }
-
-  &-leave-to {
-    transform: translateX(1em);
-  }
-
-}
-
-
+<style>
 body {
   font-family: arial, sans-serif;
 }
@@ -264,7 +487,8 @@ a:visited {
 
 .search-result {
   margin: 30px 0;
-  --search-result-color: #202124;;
+  --search-result-color: #202124;
+  ;
   --search-result-description-color: #4d5156;
   --search-result-a: blue;
 }
@@ -318,11 +542,11 @@ a:hover .search-result-meta {
 
 .v-theme--dark .search-family-types {
   --chip-background-color: transparent;
-  --chip-border: 1px solid rgba(255,255,255,0.2);
+  --chip-border: 1px solid rgba(255, 255, 255, 0.2);
   --chip-border-icon-color: #fff;
 }
 
-.search-family-types > .v-chip {
+.search-family-types>.v-chip {
   background-color: var(--chip-background-color);
   border: var(--chip-border);
   border-radius: 20px;
@@ -990,13 +1214,13 @@ a:hover .search-result-meta {
 
 @-webkit-keyframes blink {
   to {
-    visibility: hidden
+      visibility: hidden
   }
 }
 
 @keyframes blink {
   to {
-    visibility: hidden
+      visibility: hidden
   }
 }
 
@@ -1007,29 +1231,30 @@ a:hover .search-result-meta {
 
 @-webkit-keyframes flash {
   0% {
-    background-color: hsla(0, 0%, 100%, .4)
+      background-color: hsla(0, 0%, 100%, .4)
   }
 }
 
 @keyframes flash {
   0% {
-    background-color: hsla(0, 0%, 100%, .4)
+      background-color: hsla(0, 0%, 100%, .4)
   }
 }
 
 .pulse {
   animation: pulseEffect 2s ease-in-out 0s alternate infinite;
- --pulse-color: #8ab4f8;
- --pulse-color2: blue;
+  --pulse-color: #8ab4f8;
+  --pulse-color2: blue;
 }
 
 @keyframes pulseEffect {
- 0% {
-  filter:drop-shadow(0 0 50px var(--pulse-color))
- }
- to {
-  filter:drop-shadow(0 0 25px var(--pulse-color2))
- }
+  0% {
+      filter: drop-shadow(0 0 50px var(--pulse-color))
+  }
+
+  to {
+      filter: drop-shadow(0 0 25px var(--pulse-color2))
+  }
 }
 
 .result-streaming>:not(ol):not(ul):not(pre):last-child:after,
@@ -1046,14 +1271,26 @@ a:hover .search-result-meta {
 #page-controls a {
   color: #aaa;
 }
+
 #page-controls a:hover {
   color: #000;
 }
 
 .v-theme--dark #page-controls a {
-  color: rgba(255,255,255,0.2);
+  color: rgba(255, 255, 255, 0.2);
 }
+
 .v-theme--dark #page-controls a:hover {
   color: #fff;
-} 
+}
+
+.v-skeleton-loader__chip {
+  margin: 0;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.v-skeleton-loader>div {
+  max-width: 100%;
+}
 </style>

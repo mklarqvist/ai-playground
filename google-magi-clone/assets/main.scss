@@ -6,11 +6,11 @@ $family: "Inter var", "Inter", apple-system, BlinkMacSystemFont, "Segoe UI", Rob
 );
 
 :root {
-  font-family: arial, sans-serif;
+  font-family: "Inter", arial, sans-serif;
 }
 @supports (font-variation-settings: normal) {
   :root {
-    font-family: arial, sans-serif;
+    font-family: "Inter", arial, sans-serif;
   }
 }
 
