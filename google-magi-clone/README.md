@@ -4,6 +4,10 @@ Google made a recent announcement (as of yesterday when writing this) unveiling 
 
 ![Google Magi](github/google_magi.gif)
 
+There are already competitors in this space, like Perplexity AI (perplexity.ai) which is chat tool that uses foundational language models, such as GPT-4 from OpenAI, along with current information from the internet. It not only provides answers, but also references to the sources that contributed to those answers. This simple, yet powerful approach addresses the limitation of potentially outdated training data used to train the models. By returning the sources used to provide an answer, you can verify its accuracy. This combats the issue of language models generating incorrect answers.
+
+This may sound like a major project and a serious undertaking, but modern tools have made it surprisingly easy.
+
 ### Technical analysis: How is it possible that [Perplexity.ai](http://Perplexity.ai) is so fast?
 
 Looking at the responses used for the answer, we can also see that it’s also the same sites, and in exactly the same order as in the Google search request. It could be Bing, but given they are raising their API costs 300-500% in the next few weeks it is doubtful — or would require some awkward conversations with their investors as I don’t think they can ever reach profitability then. This means they have to do one of of two things:
@@ -62,7 +66,12 @@ and light mode
 
 ## How to use
 
-0. Open `pages/index.vue` and enter your own OpenAPI key where it says `const apiKey = 'YOUR-OWN-API-KEY';`.
+0. Open `pages/index.vue` and enter your own keys where it says
+```javascript
+const google_api_key = 'YOUR-GOOGLE-API-KEY';
+const google_api_cx = 'YOUR-GOOGLE-API-CX';
+const openaiApiKey = 'YOUR-OPENAI-API-KEY';
+```
 
 1. Install the dependencies
 
