@@ -3,10 +3,10 @@ import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 
 // PWA Config
-const title = "Google Magi Clone with Nuxt3 + Vuetify";
-const shortTitle = "Google Magi Clone";
+const title = "Movie similarity app with Nuxt3 + Vuetify";
+const shortTitle = "Movie similarity app";
 const description =
-  "Demo project for launching your own clone of Google Magi.";
+  "Demo project for launching your own movie similarity app.";
 const image = "https://s3.amazonaws.com/images.seroundtable.com/google-logo-exploding-1681647430.jpg";
 const url = "https://github.com/mklarqvist/ai-playground/";
 
