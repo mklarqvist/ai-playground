@@ -59,8 +59,8 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: "Vuetify 3 + Nuxt 3 Starter",
-      titleTemplate: "%s | Vuetify 3 + Nuxt 3 Starter",
+      title: "LLM Movie Recommender",
+      titleTemplate: "%s | Movie",
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
         { rel: "canonical", href: url },
