@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  relationMode    = "prisma"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// We will try to keep as little as possible from the TMDB database
+// to respect their terms of use. However, there are certain fields
+// we need to keep to make the app work in reasonable time (and to not
+// send too many requests to TMDB).
+model Movie {
+  id                             Int      @id @default(autoincrement()) @map(name: "_id")
+  imdbId                         String
+  title                          String
+  releaseYear                    Int
+  posterPath                     String
+  synopsisIMDB                   String?
+  synopsisWikipedia              String?
+  synopsisSpoiler                String?
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+  // Ids of the similar posters like [10, 45, 90, 1021]
+  // similarPosters       MovieSimilarPosters[] // List of ids with similar posters
+  // similarPostersScore  Float[]
+  // Ids of the similar text chunks, like [10, 45, 90, 1021]
+  // The text chunks are reduced across all the chunks in the synopsis text for a movie
+  // Array of most similar text chunks
+  synopsisSimilarOffsetQuery     Int[]
+  synopsisSimilarOffsetReference Int[]
+  synopsisSimilarScore           Float[]
+  synopsisSimilarMovieId         Int[]
+  // Visually similar posters
+  // Hard code for now
+  visualSimilarMovieId           Int[]
+  visualSimilarPaths             String[]
+  visualSimilarScore             Float[]
+}
+
+// A movie maps to multiple text chunks
+// each text chunk maps to multiple other text chunks
+// We generete this output data from Python
+model TextChunks {
+  id      Int    @id @default(autoincrement()) @map(name: "_id")
+  source  Int
+  text    String
+  movieId Int
+}
+
+// All the posters
+// model MovieSimilarPosters {
+//   id         Int    @id @default(autoincrement()) @map(name: "_id")
+//   source     Int
+//   posterPath String
+//   Movie      Movie  @relation(fields: [movieId], references: [id])
+//   movieId    Int
+// }
+
+// 1. Insert all movies
+// 2. Insert TextChunks and map movieId to Movie.id
+// 3. Insert MovieSimilarPosters and map movieId to Movie.id
+// 4. Update all Movie with the similarPosters and similarSynopsis

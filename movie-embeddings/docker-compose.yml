@@ -1,0 +1,28 @@
+# docker-compose.yml
+version: '3.9'
+
+services:
+  nuxt:
+    build: .
+    container_name: nuxt-app
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/dbname
+    volumes:
+      - .:/app
+      - /app/node_modules
+  db:
+    image: postgres:15.2-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dbname
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

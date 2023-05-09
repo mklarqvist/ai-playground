@@ -1,4 +1,4 @@
-# Google "Magi" clone with Nuxt3 + Vuetify
+# Google "Magi" clone   
 
 Google made a recent announcement (as of yesterday when writing this) unveiling a new project called "Magi." This initiative aims to integrate advanced large-language models with their search capabilities. As there is no public demo available for review, I've decided to create a clone inspired by the image provided below:
 
